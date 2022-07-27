@@ -12,7 +12,7 @@ defmodule IrckedElixir.Overseer do
 
   @impl true
   def init(:ok) do
-    children = 1..@chatters |> Enum.to_list |> Enum.map(fn n -> %{id: "chatter"<>to_string(n), start: {Task, :start_link, [fn -> IrckedElixir.Chatter.start(@server_address, @server_port, @base_nick <> to_string(n)) end]}} end)
+    children = 1..@chatters |> Enum.to_list |> Enum.map(fn n -> %{id: "chatter"<>to_string(n), start: {IrckedElixir.Chatter, :start_link, [%IrckedElixir.Chatter.State{ip: @server_address, port: @server_port, nick: @base_nick <> to_string(n)}]}} end)
     Supervisor.init(children, strategy: :one_for_one)
   end
 end
