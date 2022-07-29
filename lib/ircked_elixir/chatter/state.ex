@@ -1,3 +1,3 @@
 defmodule IrckedElixir.Chatter.State do
-  defstruct ip: "", port: 0, nick: "", sock: nil
+  defstruct ip: "", port: 0, nick: "", sock: nil, reporter: false
 end
