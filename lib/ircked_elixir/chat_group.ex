@@ -42,6 +42,7 @@ defmodule IrckedElixir.ChatGroup do
         IO.puts(inspect pm)
         case pm.body do
           ".cunny" -> send_all(chatters, pm.to, "cunny!")
+          ".asskey" -> play(chatters, pm.to, File.read!("/home/rishi/awesome.txt") |> String.split("\n"))
           _ -> ""
         end
 
@@ -55,12 +56,25 @@ defmodule IrckedElixir.ChatGroup do
     GenServer.start_link(__MODULE__, chatters, name: :chatgroup)
   end
 
+  def play(chatters, to, asskey) do
+    asskey
+    |> Stream.with_index |> Enum.to_list
+    |> Enum.each(
+      fn line ->
+        GenServer.call(
+          (@base_nick<>to_string(rem(elem(line, 1), @chatters)+1)) |> String.to_atom,
+          {:sendprivmsg, to, to_string(elem(line, 1))<>elem(line, 0)}
+        )
+      end
+      )
+  end
+
   def send_all(chatters, to, body) do
     chatters
     |> Map.keys
     |> Enum.each(
       fn chatter ->
-        send(String.to_atom(chatter), {:sendprivmsg, to, body})
+        GenServer.call(String.to_atom(chatter), {:sendprivmsg, to, body})
         IO.puts("LOL, "<>inspect(chatter))
       end
     )

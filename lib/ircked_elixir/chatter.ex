@@ -34,6 +34,13 @@ defmodule IrckedElixir.Chatter do
     {:noreply, state}
   end
 
+  @impl true
+  def handle_call({:sendprivmsg, to, body}, _, state) do
+    Privmsg.construct(state.nick, to, body).message |> Message.send(state.sock)
+    Process.sleep(10)
+    {:reply, :ok, state}
+  end
+
   def start_link(starting_state) do
     GenServer.start_link(__MODULE__, starting_state, name: starting_state.nick |> String.to_atom)
   end
