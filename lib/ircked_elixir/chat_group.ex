@@ -7,7 +7,8 @@ defmodule IrckedElixir.ChatGroup do
   @server_address "localhost"
   @server_port 6667
   @base_nick "functism"
-  @chatters 3
+  @chatters 20
+  @ascii_base_path "/path/to/ascii/"
 
   @impl true
   def init(chatters) do
@@ -42,7 +43,7 @@ defmodule IrckedElixir.ChatGroup do
         IO.puts(inspect pm)
         case pm.body do
           ".cunny" -> send_all(chatters, pm.to, "cunny!")
-          ".asskey" -> play(chatters, pm.to, File.read!("/home/rishi/awesome.txt") |> String.split("\n"))
+          ".play "<>cmd -> play(chatters, pm.to, @ascii_base_path<>cmd<>".txt")
           _ -> ""
         end
 
@@ -56,17 +57,25 @@ defmodule IrckedElixir.ChatGroup do
     GenServer.start_link(__MODULE__, chatters, name: :chatgroup)
   end
 
-  def play(chatters, to, asskey) do
-    asskey
-    |> Stream.with_index |> Enum.to_list
-    |> Enum.each(
-      fn line ->
-        GenServer.call(
-          (@base_nick<>to_string(rem(elem(line, 1), @chatters)+1)) |> String.to_atom,
-          {:sendprivmsg, to, to_string(elem(line, 1))<>elem(line, 0)}
-        )
-      end
-      )
+  def play(_chatters, to, path) do
+    IO.puts(path)
+    {code, asskey} = File.read(path)
+    case code do
+      :ok ->
+        asskey
+        |> String.split("\n")
+        |> Stream.with_index |> Enum.to_list
+        |> Enum.each(
+          fn line ->
+            GenServer.call(
+              (@base_nick<>to_string(rem(elem(line, 1), @chatters)+1)) |> String.to_atom,
+              {:sendprivmsg, to, elem(line, 0)}
+            )
+          end
+          )
+      _ -> send(String.to_atom(@base_nick<>"1"), {:sendprivmsg, to, "asskey not found :D"})
+    end
+
   end
 
   def send_all(chatters, to, body) do
